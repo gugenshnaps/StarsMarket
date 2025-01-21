@@ -1,0 +1,15 @@
+{
+  "name": "stars-marketplace",
+  "version": "1.0.0",
+  "description": "Telegram WebApp for Stars Marketplace",
+  "scripts": {
+    "test": "echo \"No tests specified\"",
+    "build": "echo \"No build step required\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gugenshnaps/StarsMarket.git"
+  },
+  "author": "",
+  "license": "MIT"
+} 
