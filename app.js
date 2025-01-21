@@ -6,6 +6,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Расширяем на весь экран
     tg.expand();
 
+    // Загружаем данные пользователя
+    if (tg.initDataUnsafe.user) {
+        const user = tg.initDataUnsafe.user;
+        
+        // Аватар
+        const avatar = document.getElementById('userAvatar');
+        if (user.photo_url) {
+            avatar.src = user.photo_url;
+            avatar.classList.remove('hidden');
+        }
+        
+        // Имя
+        const name = document.getElementById('userName');
+        const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+        if (fullName) {
+            name.textContent = fullName;
+            name.classList.remove('hidden');
+        }
+        
+        // Username
+        const username = document.getElementById('userUsername');
+        if (user.username) {
+            username.textContent = '@' + user.username;
+            username.classList.remove('hidden');
+        }
+    }
+
     // Устанавливаем основной цвет
     document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color);
     document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color);
@@ -13,20 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
     document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color);
     document.documentElement.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color);
-
-    // Показываем информацию о пользователе
-    if (tg.initDataUnsafe.user) {
-        const avatar = document.getElementById('accountAvatar');
-        const name = document.getElementById('accountName');
-        
-        if (tg.initDataUnsafe.user.photo_url) {
-            avatar.src = tg.initDataUnsafe.user.photo_url;
-            avatar.classList.remove('hidden');
-        }
-        
-        name.textContent = tg.initDataUnsafe.user.first_name;
-        name.classList.remove('hidden');
-    }
 
     // Настраиваем кнопку в хедере Telegram
     tg.MainButton.setParams({
