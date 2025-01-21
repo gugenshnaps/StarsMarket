@@ -1,5 +1,8 @@
 // Инициализация Telegram WebApp
 const tg = window.Telegram.WebApp;
+console.log('Telegram WebApp:', tg); // Проверяем объект WebApp
+console.log('Init data:', tg.initData); // Проверяем init data
+console.log('Init data unsafe:', tg.initDataUnsafe); // Проверяем unsafe data
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,18 +12,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Загружаем данные пользователя
     if (tg.initDataUnsafe.user) {
         const user = tg.initDataUnsafe.user;
+        console.log('User data:', user); // Отладочная информация
         
         // Аватар
         const avatar = document.getElementById('userAvatar');
         if (user.photo_url) {
+            console.log('Photo URL:', user.photo_url); // Проверяем URL аватарки
             avatar.src = user.photo_url;
             avatar.classList.remove('hidden');
+        } else {
+            console.log('No photo URL provided'); // Если URL отсутствует
+            // Показываем заглушку или инициалы
+            avatar.classList.remove('hidden');
+            avatar.style.background = var(--gradient-primary);
+            avatar.style.display = 'flex';
+            avatar.style.alignItems = 'center';
+            avatar.style.justifyContent = 'center';
+            avatar.textContent = user.first_name.charAt(0);
         }
         
         // Имя
         const name = document.getElementById('userName');
         const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
         if (fullName) {
+            console.log('Full name:', fullName); // Проверяем имя
             name.textContent = fullName;
             name.classList.remove('hidden');
         }
@@ -28,9 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Username
         const username = document.getElementById('userUsername');
         if (user.username) {
+            console.log('Username:', user.username); // Проверяем username
             username.textContent = '@' + user.username;
             username.classList.remove('hidden');
         }
+    } else {
+        console.log('No user data available'); // Если данные пользователя отсутствуют
     }
 
     // Устанавливаем основной цвет
