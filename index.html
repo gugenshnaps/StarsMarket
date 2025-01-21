@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stars Marketplace</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="account-info">
+            <img id="accountAvatar" src="" alt="Avatar" class="avatar hidden">
+            <span id="accountName" class="hidden"></span>
+        </div>
+        
+        <div class="input-group">
+            <label for="recipientAccount">Telegram Username:</label>
+            <input type="text" id="recipientAccount" placeholder="@username">
+        </div>
+
+        <div class="input-group">
+            <label for="starsAmount">Количество Stars:</label>
+            <input type="number" id="starsAmount" placeholder="Например: 1000">
+            <div class="quick-amounts">
+                <button class="quick-amount" data-amount="1000">1000</button>
+                <button class="quick-amount" data-amount="2000">2000</button>
+                <button class="quick-amount" data-amount="5000">5000</button>
+                <button class="quick-amount" data-amount="10000">10000</button>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="cryptoSelect">Способ оплаты:</label>
+            <select id="cryptoSelect">
+                <option value="TON">TON</option>
+                <option value="BTC">Bitcoin (BTC)</option>
+                <option value="ETH">Ethereum (ETH)</option>
+                <option value="USDT">Tether (USDT)</option>
+                <option value="BNB">Binance Coin (BNB)</option>
+                <option value="SOL">Solana (SOL)</option>
+                <option value="ADA">Cardano (ADA)</option>
+                <option value="XRP">Ripple (XRP)</option>
+                <option value="DOGE">Dogecoin (DOGE)</option>
+                <option value="DOT">Polkadot (DOT)</option>
+                <option value="SHIB">Shiba Inu (SHIB)</option>
+            </select>
+        </div>
+
+        <div class="price-display">
+            <span id="priceDisplay">0</span>
+            <span id="selectedCrypto">TON</span>
+            <div class="usd-price">≈ $<span id="usdPrice">0.00</span></div>
+        </div>
+
+        <button id="buyButton" class="button">КУПИТЬ</button>
+    </div>
+
+    <div id="paymentModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Оплата Stars</h2>
+            <div class="payment-details">
+                <p>Сумма к оплате: <span id="modalAmount">0</span> <span id="modalCrypto">TON</span></p>
+                <p>Адрес для перевода:</p>
+                <code id="walletAddress">EQBz...your_wallet_address</code>
+                <p class="timer">Осталось времени: <span id="paymentTimer">5:00</span></p>
+            </div>
+            <button id="confirmButton" class="button">ПОДТВЕРДИТЬ</button>
+            <button id="closeModal" class="button secondary">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="successNotification" class="notification">
+        Скоро ваши STARS будут на балансе вашего аккаунта в Telegram!<br>
+        Если у вас возникли проблемы или вопросы свяжитесь с нами!<br>
+        Спасибо!
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
