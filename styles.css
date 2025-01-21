@@ -1,10 +1,10 @@
 :root {
-    --tg-theme-bg-color: #ffffff;
-    --tg-theme-text-color: #000000;
-    --tg-theme-hint-color: #8E8E93;
-    --tg-theme-link-color: #007AFF;
-    --tg-theme-button-color: #007AFF;
-    --tg-theme-button-text-color: #ffffff;
+    --tg-theme-bg-color: var(--tg-theme-bg-color, #ffffff);
+    --tg-theme-text-color: var(--tg-theme-text-color, #000000);
+    --tg-theme-hint-color: var(--tg-theme-hint-color, #999999);
+    --tg-theme-link-color: var(--tg-theme-link-color, #2481cc);
+    --tg-theme-button-color: var(--tg-theme-button-color, #2481cc);
+    --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
     --border-radius: 16px;
     --gradient-primary: linear-gradient(135deg, #007AFF, #00C7FF);
     --gradient-secondary: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(0, 199, 255, 0.1));
