@@ -1,6 +1,41 @@
 // Инициализация Telegram WebApp
 const tg = window.Telegram.WebApp;
-tg.expand();
+
+// Инициализация приложения
+document.addEventListener('DOMContentLoaded', () => {
+    // Расширяем на весь экран
+    tg.expand();
+
+    // Устанавливаем основной цвет
+    document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color);
+    document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color);
+    document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color);
+    document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color);
+    document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color);
+    document.documentElement.style.setProperty('--tg-theme-link-color', tg.themeParams.link_color);
+
+    // Показываем информацию о пользователе
+    if (tg.initDataUnsafe.user) {
+        const avatar = document.getElementById('accountAvatar');
+        const name = document.getElementById('accountName');
+        
+        if (tg.initDataUnsafe.user.photo_url) {
+            avatar.src = tg.initDataUnsafe.user.photo_url;
+            avatar.classList.remove('hidden');
+        }
+        
+        name.textContent = tg.initDataUnsafe.user.first_name;
+        name.classList.remove('hidden');
+    }
+
+    // Настраиваем кнопку в хедере Telegram
+    tg.MainButton.setParams({
+        text: 'КУПИТЬ STARS',
+        color: tg.themeParams.button_color,
+        text_color: tg.themeParams.button_text_color,
+        is_active: false
+    });
+});
 
 // Адреса кошельков для каждой криптовалюты
 const walletAddresses = {
