@@ -31,6 +31,12 @@ let cryptoPrices = {
     KAS: 0
 };
 
+// В начале файла после инициализации tg
+tg.MainButton.text = "КУПИТЬ STARS";
+tg.MainButton.color = tg.themeParams.button_color;
+tg.MainButton.textColor = tg.themeParams.button_text_color;
+tg.MainButton.hide();
+
 // Обработчики быстрого выбора количества
 quickAmounts.forEach(button => {
     button.addEventListener('click', () => {
@@ -41,8 +47,18 @@ quickAmounts.forEach(button => {
     });
 });
 
+// Заменим обработчик кнопки buyButton на MainButton
+starsAmount.addEventListener('input', () => {
+    const amount = Number(starsAmount.value) || 0;
+    if (amount > 0) {
+        tg.MainButton.show();
+    } else {
+        tg.MainButton.hide();
+    }
+    updatePrice();
+});
+
 // Обновление цены при изменении
-starsAmount.addEventListener('input', updatePrice);
 cryptoSelect.addEventListener('change', updatePrice);
 
 // Получение курсов с Bybit
@@ -82,8 +98,8 @@ function updatePrice() {
     buyButton.disabled = amount <= 0;
 }
 
-// Обработка покупки
-buyButton.addEventListener('click', () => {
+// Обработчик MainButton
+tg.MainButton.onClick(() => {
     const amount = Number(starsAmount.value);
     if (amount > 0) {
         walletAddress.textContent = walletAddresses[cryptoSelect.value];
@@ -122,6 +138,27 @@ function startTimer() {
         timeLeft--;
     }, 1000);
 }
+
+// Добавим обработчики для закрытия клавиатуры
+starsAmount.addEventListener('blur', () => {
+    tg.HapticFeedback.impactOccurred('light');
+});
+
+// Добавим кнопку "Готово" над клавиатурой
+tg.setHeaderButton({
+    text: 'Готово',
+    show: true,
+    onClick: () => {
+        starsAmount.blur();
+    }
+});
+
+// Также добавим обработку Enter
+starsAmount.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        starsAmount.blur();
+    }
+});
 
 // Инициализация
 fetchPrices();
