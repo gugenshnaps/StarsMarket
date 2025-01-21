@@ -7,7 +7,6 @@ const starsAmount = document.getElementById('starsAmount');
 const priceElement = document.querySelector('.price');
 const priceUsdElement = document.querySelector('.price-usd');
 const quickAmounts = document.querySelectorAll('.quick-amount');
-const buyButton = document.getElementById('buyButton');
 const paymentModal = document.getElementById('paymentModal');
 const walletAddress = document.getElementById('walletAddress');
 const confirmButton = document.getElementById('confirmButton');
@@ -15,27 +14,33 @@ const closeModal = document.getElementById('closeModal');
 
 // Объект для хранения курсов криптовалют
 let cryptoPrices = {
-    TON: 0,
+    TON: 2.5,      // Примерные начальные значения
     USDT: 1,
-    BTC: 0,
-    ETH: 0,
-    BNB: 0,
-    SOL: 0,
-    XRP: 0,
-    ADA: 0,
-    DOGE: 0,
-    TRX: 0,
-    DOT: 0,
-    MATIC: 0,
-    LTC: 0,
-    KAS: 0
+    BTC: 43000,
+    ETH: 2200,
+    BNB: 300,
+    SOL: 100,
+    XRP: 0.6,
+    ADA: 0.5,
+    DOGE: 0.08,
+    TRX: 0.09,
+    DOT: 7,
+    MATIC: 0.8,
+    LTC: 70,
+    KAS: 0.1
 };
 
-// В начале файла после инициализации tg
-tg.MainButton.text = "КУПИТЬ STARS";
-tg.MainButton.color = tg.themeParams.button_color;
-tg.MainButton.textColor = tg.themeParams.button_text_color;
+// Настройка MainButton
+tg.MainButton.setText("КУПИТЬ STARS");
 tg.MainButton.hide();
+tg.MainButton.onClick(() => {
+    const amount = Number(starsAmount.value);
+    if (amount > 0) {
+        walletAddress.textContent = walletAddresses[cryptoSelect.value];
+        paymentModal.classList.remove('hidden');
+        startTimer();
+    }
+});
 
 // Обработчики быстрого выбора количества
 quickAmounts.forEach(button => {
@@ -47,7 +52,7 @@ quickAmounts.forEach(button => {
     });
 });
 
-// Заменим обработчик кнопки buyButton на MainButton
+// Обработчик ввода количества
 starsAmount.addEventListener('input', () => {
     const amount = Number(starsAmount.value) || 0;
     if (amount > 0) {
@@ -58,7 +63,7 @@ starsAmount.addEventListener('input', () => {
     updatePrice();
 });
 
-// Обновление цены при изменении
+// Обновление при смене криптовалюты
 cryptoSelect.addEventListener('change', updatePrice);
 
 // Получение курсов с Bybit
@@ -73,7 +78,10 @@ async function fetchPrices() {
                 if (symbol.endsWith('USDT')) {
                     const coin = symbol.replace('USDT', '');
                     if (coin in cryptoPrices) {
-                        cryptoPrices[coin] = parseFloat(item.lastPrice);
+                        const price = parseFloat(item.lastPrice);
+                        if (price > 0) { // Проверяем, что цена положительная
+                            cryptoPrices[coin] = price;
+                        }
                     }
                 }
             });
@@ -90,23 +98,18 @@ function updatePrice() {
     const crypto = cryptoSelect.value;
     
     const usdPrice = amount * 0.015; // $0.015 за 1 Stars
-    const cryptoAmount = crypto === 'USDT' ? usdPrice : usdPrice / cryptoPrices[crypto];
+    
+    let cryptoAmount;
+    if (crypto === 'USDT') {
+        cryptoAmount = usdPrice;
+    } else {
+        const price = cryptoPrices[crypto];
+        cryptoAmount = price > 0 ? usdPrice / price : 0;
+    }
     
     priceElement.textContent = `${cryptoAmount.toFixed(6)} ${crypto}`;
     priceUsdElement.textContent = `≈ $${usdPrice.toFixed(2)}`;
-    
-    buyButton.disabled = amount <= 0;
 }
-
-// Обработчик MainButton
-tg.MainButton.onClick(() => {
-    const amount = Number(starsAmount.value);
-    if (amount > 0) {
-        walletAddress.textContent = walletAddresses[cryptoSelect.value];
-        paymentModal.classList.remove('hidden');
-        startTimer();
-    }
-});
 
 // Закрытие модального окна
 closeModal.addEventListener('click', () => {
