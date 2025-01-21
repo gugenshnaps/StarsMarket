@@ -1,6 +1,15 @@
 // Инициализация Telegram WebApp
 const tg = window.Telegram.WebApp;
 
+// Инициализация MainButton
+tg.MainButton.setParams({
+    text: 'КУПИТЬ STARS',
+    is_visible: false,
+    is_active: true,
+    color: tg.themeParams.button_color || '#2481cc',
+    text_color: tg.themeParams.button_text_color || '#ffffff'
+});
+
 // Получаем элементы DOM
 const cryptoSelect = document.getElementById('cryptoSelect');
 const starsAmount = document.getElementById('starsAmount');
@@ -11,6 +20,7 @@ const paymentModal = document.getElementById('paymentModal');
 const walletAddress = document.getElementById('walletAddress');
 const confirmButton = document.getElementById('confirmButton');
 const closeModal = document.getElementById('closeModal');
+const buyButton = document.getElementById('buyButton');
 
 // Объект для хранения курсов криптовалют
 let cryptoPrices = {
@@ -30,29 +40,19 @@ let cryptoPrices = {
     KAS: 0.1
 };
 
-// Настройка MainButton
-tg.MainButton.setText("КУПИТЬ STARS");
-tg.MainButton.hide();
-tg.MainButton.onClick(() => {
+// Обработчик нажатия MainButton
+tg.MainButton.onClick(function() {
     const amount = Number(starsAmount.value);
+    const crypto = cryptoSelect.value;
+    
     if (amount > 0) {
-        walletAddress.textContent = walletAddresses[cryptoSelect.value];
+        walletAddress.textContent = walletAddresses[crypto];
         paymentModal.classList.remove('hidden');
         startTimer();
     }
 });
 
-// Обработчики быстрого выбора количества
-quickAmounts.forEach(button => {
-    button.addEventListener('click', () => {
-        quickAmounts.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        starsAmount.value = button.dataset.amount;
-        updatePrice();
-    });
-});
-
-// Обработчик ввода количества
+// Обработчик ввода количества Stars
 starsAmount.addEventListener('input', () => {
     const amount = Number(starsAmount.value) || 0;
     if (amount > 0) {
@@ -61,6 +61,18 @@ starsAmount.addEventListener('input', () => {
         tg.MainButton.hide();
     }
     updatePrice();
+});
+
+// Также добавим обработку быстрых кнопок
+quickAmounts.forEach(button => {
+    button.addEventListener('click', () => {
+        quickAmounts.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        starsAmount.value = button.dataset.amount;
+        updatePrice();
+        // Показываем MainButton при выборе суммы
+        tg.MainButton.show();
+    });
 });
 
 // Обновление при смене криптовалюты
@@ -166,3 +178,14 @@ starsAmount.addEventListener('keypress', (e) => {
 // Инициализация
 fetchPrices();
 setInterval(fetchPrices, 10000);
+
+buyButton.addEventListener('click', () => {
+    const amount = Number(starsAmount.value);
+    const crypto = cryptoSelect.value;
+    
+    if (amount > 0) {
+        walletAddress.textContent = walletAddresses[crypto];
+        paymentModal.classList.remove('hidden');
+        startTimer();
+    }
+});
