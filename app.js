@@ -68,6 +68,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Получаем элементы DOM
+const cryptoSelect = document.getElementById('cryptoSelect');
+const starsAmount = document.getElementById('starsAmount');
+const priceElement = document.querySelector('.price');
+const priceUsdElement = document.querySelector('.price-usd');
+const quickAmounts = document.querySelectorAll('.quick-amount');
+const buyButton = document.getElementById('buyButton');
+const paymentModal = document.getElementById('paymentModal');
+const walletAddress = document.getElementById('walletAddress');
+const confirmButton = document.getElementById('confirmButton');
+const closeModal = document.getElementById('closeModal');
+
 // Адреса кошельков для каждой криптовалюты
 const walletAddresses = {
     TON: 'EQBz1_22222222222222222222222222222222222222222',
@@ -101,12 +113,12 @@ const starsPrice = {
 
 // Объект для хранения курсов криптовалют
 let cryptoPrices = {
-    TON: 1,
+    TON: 0,
     USDT: 1,
-    USDC: 0,
-    DAI: 0,
-    BUSD: 0,
-    TUSD: 0,
+    USDC: 1,
+    DAI: 1,
+    BUSD: 1,
+    TUSD: 1,
     BTC: 0,
     ETH: 0,
     SOL: 0,
@@ -125,371 +137,117 @@ let cryptoPrices = {
     SHIB: 0
 };
 
-// Храним последний известный курс TON/USDT
-let lastTonUsdPrice = null;
+// Обработчики быстрого выбора количества
+quickAmounts.forEach(button => {
+    button.addEventListener('click', () => {
+        // Убираем активный класс у всех кнопок
+        quickAmounts.forEach(btn => btn.classList.remove('active'));
+        // Добавляем активный класс нажатой кнопке
+        button.classList.add('active');
+        // Устанавливаем значение в input
+        starsAmount.value = button.dataset.amount;
+        // Обновляем цену
+        updatePrice();
+    });
+});
 
-// Получаем элементы DOM
-const cryptoSelect = document.getElementById('cryptoSelect');
-const starsAmount = document.getElementById('starsAmount');
-const priceDisplay = document.getElementById('priceDisplay');
-const selectedCrypto = document.getElementById('selectedCrypto');
-const buyButton = document.getElementById('buyButton');
-const paymentModal = document.getElementById('paymentModal');
-const modalAmount = document.getElementById('modalAmount');
-const modalCrypto = document.getElementById('modalCrypto');
-const walletAddress = document.getElementById('walletAddress');
-const confirmButton = document.getElementById('confirmButton');
-const closeModal = document.getElementById('closeModal');
-const quickAmountButtons = document.querySelectorAll('.quick-amount');
-const usdPrice = document.getElementById('usdPrice');
+// Обновление цены при изменении количества Stars или криптовалюты
+starsAmount.addEventListener('input', updatePrice);
+cryptoSelect.addEventListener('change', updatePrice);
 
-// Добавляем новые переменные
-const accountInfo = document.querySelector('.account-info');
-const accountAvatar = document.getElementById('accountAvatar');
-const accountName = document.getElementById('accountName');
-
-// Добавляем переменные для таймера
-let paymentTimer = null;
-const PAYMENT_TIMEOUT = 5 * 60; // 5 минут в секундах
-const timerDisplay = document.getElementById('paymentTimer');
-
-// Добавляем переменную для уведомления
-const successNotification = document.getElementById('successNotification');
-
-// Временное решение для цены Stars, пока не решим проблему с CORS
-async function fetchStarsPrice() {
+// Функция получения курсов с Bybit
+async function fetchPrices() {
     try {
-        // Здесь должен быть запрос к fragment.com
-        // Пока используем фиксированное значение
-        starsPrice.TON = 0.1462; // Цена за 50 Stars
-        calculatePrice();
-    } catch (error) {
-        console.error('Ошибка при получении цены Stars:', error);
-    }
-}
-
-// Обновляем список поддерживаемых пар
-const pairs = [
-    // Стейблкоины
-    'TONUSDT',
-    'USDCUSDT',
-    'DAIUSDT',
-    'BUSDUSDT',
-    'TUSDUSDT',
-    
-    // Топ криптовалюты
-    'BTCUSDT',
-    'ETHUSDT',
-    'SOLUSDT',
-    'BNBUSDT',
-    
-    // Альткоины
-    'KASUSDT',
-    'AVAXUSDT',
-    'LINKUSDT',
-    'UNIUSDT',
-    'ATOMUSDT',
-    'ADAUSDT',
-    'XRPUSDT',
-    'DOGEUSDT',
-    'DOTUSDT',
-    'LTCUSDT',
-    'TRXUSDT',
-    'SHIBUSDT'
-];
-
-// Функция получения курсов криптовалют с ByBit
-async function fetchCryptoPrices() {
-    try {
-        // Используем глобальный список пар
-        const usdtPrices = {};
+        const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot');
+        const data = await response.json();
         
-        // Получаем курсы всех криптовалют к USDT
-        for (const pair of pairs) {
-            try {
-                const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${pair}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.retCode === 0 && data.result.list && data.result.list[0]) {
-                    const symbol = pair.replace('USDT', '');
-                    const price = parseFloat(data.result.list[0].lastPrice);
-                    
-                    if (!isNaN(price) && price > 0) {
-                        usdtPrices[symbol] = price;
-                        console.log(`${symbol}/USDT price:`, price);
+        if (data.result && data.result.list) {
+            data.result.list.forEach(item => {
+                const symbol = item.symbol;
+                if (symbol.endsWith('USDT')) {
+                    const coin = symbol.replace('USDT', '');
+                    if (coin in cryptoPrices) {
+                        cryptoPrices[coin] = parseFloat(item.lastPrice);
                     }
                 }
-            } catch (error) {
-                console.error(`Error fetching ${pair}:`, error);
-            }
+            });
         }
-
-        // Обновляем курсы всех криптовалют
-        if (Object.keys(usdtPrices).length > 0) {
-            cryptoPrices = {
-                TON: usdtPrices.TON || 0,
-                USDT: 1, // USDT всегда 1
-                USDC: usdtPrices.USDC || 0,
-                DAI: usdtPrices.DAI || 0,
-                BUSD: usdtPrices.BUSD || 0,
-                TUSD: usdtPrices.TUSD || 0,
-                BTC: usdtPrices.BTC || 0,
-                ETH: usdtPrices.ETH || 0,
-                SOL: usdtPrices.SOL || 0,
-                BNB: usdtPrices.BNB || 0,
-                KAS: usdtPrices.KAS || 0,
-                AVAX: usdtPrices.AVAX || 0,
-                LINK: usdtPrices.LINK || 0,
-                UNI: usdtPrices.UNI || 0,
-                ATOM: usdtPrices.ATOM || 0,
-                ADA: usdtPrices.ADA || 0,
-                XRP: usdtPrices.XRP || 0,
-                DOGE: usdtPrices.DOGE || 0,
-                DOT: usdtPrices.DOT || 0,
-                LTC: usdtPrices.LTC || 0,
-                TRX: usdtPrices.TRX || 0,
-                SHIB: usdtPrices.SHIB || 0
-            };
-
-            console.log('Updated crypto prices:', cryptoPrices);
-            calculatePrice();
-        }
+        
+        // Обновляем отображение цены
+        updatePrice();
+        
     } catch (error) {
-        console.error('Error in fetchCryptoPrices:', error);
+        console.error('Error fetching prices:', error);
     }
 }
 
-// Функция расчета цены
-function calculatePrice() {
-    const stars = parseFloat(starsAmount.value) || 0;
-    const selectedCryptoValue = cryptoSelect.value;
+// Функция обновления цены
+function updatePrice() {
+    const amount = Number(starsAmount.value) || 0;
+    const crypto = cryptoSelect.value;
     
-    // Проверяем наличие курсов
-    if (!cryptoPrices[selectedCryptoValue]) {
-        console.error('Missing crypto price');
-        return;
-    }
-
-    // 1. Рассчитываем стоимость Stars в USDT
-    const priceInUsdt = stars * starsPrice.USDT;
+    // Рассчитываем стоимость
+    const usdPrice = amount * starsPrice.USDT;
+    const cryptoAmount = crypto === 'USDT' ? usdPrice : usdPrice / cryptoPrices[crypto];
     
-    // 2. Конвертируем из USDT в выбранную криптовалюту
-    let finalPrice;
-    if (selectedCryptoValue === 'USDT') {
-        finalPrice = priceInUsdt;
-    } else if (selectedCryptoValue === 'TON') {
-        finalPrice = priceInUsdt / cryptoPrices.TON;
-    } else {
-        // Для остальных криптовалют: делим цену в USDT на курс криптовалюты
-        finalPrice = priceInUsdt / cryptoPrices[selectedCryptoValue];
-    }
-
-    console.log('Price calculation:', {
-        stars,
-        priceInUsdt,
-        selectedCrypto: selectedCryptoValue,
-        cryptoPrice: cryptoPrices[selectedCryptoValue],
-        finalPrice
-    });
-
-    // Отображаем результаты
-    if (!isNaN(finalPrice) && finalPrice > 0) {
-        priceDisplay.textContent = finalPrice.toFixed(8);
-        selectedCrypto.textContent = selectedCryptoValue;
-        usdPrice.textContent = priceInUsdt.toFixed(2);
-    }
+    // Обновляем отображение
+    priceElement.textContent = `${cryptoAmount.toFixed(6)} ${crypto}`;
+    priceUsdElement.textContent = `≈ $${usdPrice.toFixed(2)}`;
+    
+    // Активируем кнопку покупки если сумма больше 0
+    buyButton.disabled = amount <= 0;
 }
 
-// Обработчики событий
-cryptoSelect.addEventListener('change', calculatePrice);
-
-starsAmount.addEventListener('input', () => {
-    quickAmountButtons.forEach(btn => btn.classList.remove('active'));
-    calculatePrice();
+// Обработчик нажатия кнопки покупки
+buyButton.addEventListener('click', () => {
+    const amount = Number(starsAmount.value);
+    const crypto = cryptoSelect.value;
+    
+    if (amount > 0) {
+        // Показываем адрес кошелька
+        walletAddress.textContent = walletAddresses[crypto];
+        // Показываем модальное окно
+        paymentModal.classList.remove('hidden');
+        // Запускаем таймер
+        startTimer();
+    }
 });
 
-quickAmountButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        quickAmountButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        starsAmount.value = button.dataset.amount;
-        calculatePrice();
-    });
+// Закрытие модального окна
+closeModal.addEventListener('click', () => {
+    paymentModal.classList.add('hidden');
 });
 
-// Функция форматирования времени
-function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
+// Подтверждение оплаты
+confirmButton.addEventListener('click', () => {
+    paymentModal.classList.add('hidden');
+    const notification = document.getElementById('notification');
+    notification.classList.remove('hidden');
+    setTimeout(() => {
+        notification.classList.add('hidden');
+    }, 3000);
+});
 
-// Функция запуска таймера
-function startPaymentTimer() {
-    let timeLeft = PAYMENT_TIMEOUT;
+// Функция таймера
+function startTimer() {
+    let timeLeft = 5 * 60; // 5 минут
+    const timerElement = document.getElementById('paymentTimer');
     
-    // Очищаем предыдущий таймер если он есть
-    if (paymentTimer) {
-        clearInterval(paymentTimer);
-    }
-    
-    // Показываем начальное время
-    timerDisplay.textContent = formatTime(timeLeft);
-    
-    paymentTimer = setInterval(() => {
-        timeLeft -= 1;
+    const timer = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
         
         if (timeLeft <= 0) {
-            // Время вышло
-            clearInterval(paymentTimer);
+            clearInterval(timer);
             paymentModal.classList.add('hidden');
-            alert('Время на оплату истекло. Пожалуйста, попробуйте снова.');
-        } else {
-            // Обновляем отображение таймера
-            timerDisplay.textContent = formatTime(timeLeft);
-            
-            // Добавляем красный цвет когда осталось мало времени
-            if (timeLeft <= 60) { // последняя минута
-                timerDisplay.style.color = '#FF3B30';
-            }
         }
+        timeLeft--;
     }, 1000);
 }
 
-// Функция остановки таймера
-function stopPaymentTimer() {
-    if (paymentTimer) {
-        clearInterval(paymentTimer);
-        paymentTimer = null;
-    }
-    timerDisplay.textContent = formatTime(PAYMENT_TIMEOUT);
-    timerDisplay.style.color = ''; // сбрасываем цвет
-}
+// Получаем курсы при загрузке
+fetchPrices();
 
-// Обновляем обработчик открытия модального окна
-buyButton.addEventListener('click', () => {
-    const amount = parseFloat(starsAmount.value);
-    
-    // Проверяем количество Stars
-    if (amount <= 0) {
-        alert('Пожалуйста, введите количество Stars больше 0');
-        return;
-    }
-
-    // Проверяем username только при попытке покупки
-    const recipientAccount = document.getElementById('recipientAccount').value.trim();
-    if (!recipientAccount) {
-        alert('Пожалуйста, введите аккаунт получателя');
-        return;
-    }
-
-    modalAmount.textContent = priceDisplay.textContent;
-    modalCrypto.textContent = cryptoSelect.value;
-    walletAddress.textContent = walletAddresses[cryptoSelect.value];
-    paymentModal.classList.remove('hidden');
-    
-    // Запускаем таймер
-    startPaymentTimer();
-});
-
-// Обновляем обработчик закрытия модального окна
-closeModal.addEventListener('click', () => {
-    paymentModal.classList.add('hidden');
-    stopPaymentTimer();
-});
-
-// Функция показа уведомления
-function showNotification() {
-    successNotification.classList.add('show');
-    
-    // Скрываем уведомление через 5 секунд
-    setTimeout(() => {
-        successNotification.classList.remove('show');
-    }, 5000);
-}
-
-async function notifyAdmin(orderData) {
-    try {
-        const message = `
-🔔 *Новый заказ Stars!*
-
-👤 Получатель: ${orderData.recipientAccount}
-💎 Количество: ${orderData.starsAmount} Stars
-💰 Сумма: ${orderData.finalPrice} ${orderData.selectedCrypto}
-💵 USD: $${orderData.usdAmount}
-🕒 Время: ${new Date().toLocaleString()}
-        `;
-
-        const response = await fetch(`https://api.telegram.org/bot${BOT_CONFIG.token}/sendMessage`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: BOT_CONFIG.chatId,
-                text: message,
-                parse_mode: 'Markdown'
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to send notification');
-        }
-    } catch (error) {
-        console.error('Error sending notification:', error);
-    }
-}
-
-// Обновляем обработчик кнопки подтверждения
-confirmButton.addEventListener('click', async () => {
-    const orderData = {
-        recipientAccount: document.getElementById('recipientAccount').value,
-        starsAmount: starsAmount.value,
-        finalPrice: priceDisplay.textContent,
-        selectedCrypto: cryptoSelect.value,
-        usdAmount: usdPrice.textContent
-    };
-
-    await notifyAdmin(orderData);
-    stopPaymentTimer();
-    paymentModal.classList.add('hidden');
-    showNotification();
-});
-
-// Интервал обновления цен
-let priceUpdateInterval;
-
-function startPriceUpdates() {
-    if (priceUpdateInterval) {
-        clearInterval(priceUpdateInterval);
-    }
-    
-    priceUpdateInterval = setInterval(async () => {
-        await Promise.all([
-            fetchStarsPrice(),
-            fetchCryptoPrices()
-        ]);
-    }, 15000);
-}
-
-// Инициализация
-async function initialize() {
-    await Promise.all([
-        fetchStarsPrice(),
-        fetchCryptoPrices()
-    ]);
-    calculatePrice();
-    startPriceUpdates();
-}
-
-// Очищаем таймер при закрытии страницы
-window.addEventListener('beforeunload', () => {
-    stopPaymentTimer();
-    if (priceUpdateInterval) {
-        clearInterval(priceUpdateInterval);
-    }
-});
-
-// Запуск инициализации
-initialize();
+// Обновляем курсы каждые 10 секунд
+setInterval(fetchPrices, 10000);
