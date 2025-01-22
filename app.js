@@ -64,6 +64,8 @@ let cryptoPrices = {
     SHIB: 0
 };
 
+let currentTimer; // Глобальная переменная для хранения текущего таймера
+
 // Быстрые кнопки
 quickAmounts.forEach(button => {
     button.addEventListener('click', () => {
@@ -129,36 +131,75 @@ function updatePrice() {
     priceUsdElement.textContent = `≈ $${usdPrice.toFixed(2)}`;
 }
 
-// Обработчики событий
-starsAmount.addEventListener('input', updatePrice);
-cryptoSelect.addEventListener('change', updatePrice);
-closeModal.addEventListener('click', () => paymentModal.classList.add('hidden'));
+// Обновляем обработчики
+closeModal.addEventListener('click', () => {
+    paymentModal.classList.add('hidden');
+    if (currentTimer) {
+        clearInterval(currentTimer);
+    }
+});
+
 confirmButton.addEventListener('click', () => {
     paymentModal.classList.add('hidden');
+    if (currentTimer) {
+        clearInterval(currentTimer);
+    }
     const notification = document.getElementById('notification');
     notification.classList.remove('hidden');
     setTimeout(() => notification.classList.add('hidden'), 3000);
 });
 
-// Таймер
-function startTimer() {
-    let timeLeft = 300; // 5 минут
-    const timerElement = document.getElementById('paymentTimer');
-    
-    const timer = setInterval(() => {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        
-        if (timeLeft <= 0) {
-            clearInterval(timer);
-            paymentModal.classList.add('hidden');
-        }
-        timeLeft--;
-    }, 1000);
-}
-
 // Инициализация
 fetchPrices();
 // Обновляем курсы каждые 10 секунд
 setInterval(fetchPrices, 10000);
+
+// Автоматически выбираем 1000 Stars при загрузке
+window.addEventListener('load', () => {
+    const button1000 = Array.from(quickAmounts).find(btn => btn.dataset.amount === '1000');
+    if (button1000) {
+        button1000.click();
+    }
+});
+
+// Добавим обработчик закрытия окна
+window.addEventListener('beforeunload', () => {
+    if (currentTimer) {
+        clearInterval(currentTimer);
+    }
+});
+
+// Также добавим обработчик для Telegram Mini Apps
+window.Telegram.WebApp.onEvent('viewportChanged', () => {
+    if (!window.Telegram.WebApp.isExpanded && currentTimer) {
+        clearInterval(currentTimer);
+    }
+});
+
+starsAmount.addEventListener('focus', () => {
+    if (window.Telegram.WebApp.platform === 'ios') {
+        window.Telegram.WebApp.setHeaderButton({
+            text: 'Done',
+            show: true,
+            onClick: () => starsAmount.blur()
+        });
+    }
+});
+
+starsAmount.addEventListener('blur', () => {
+    window.Telegram.WebApp.setHeaderButton({
+        show: false
+    });
+});
+
+document.addEventListener('click', (e) => {
+    if (e.target !== starsAmount && document.activeElement === starsAmount) {
+        starsAmount.blur();
+    }
+});
+
+starsAmount.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        starsAmount.blur();
+    }
+});
