@@ -14,16 +14,54 @@ const closeModal = document.getElementById('closeModal');
 const walletAddresses = {
     TON: 'EQBz1_22222222222222222222222222222222222222222',
     USDT: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    USDC: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    DAI: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    BUSD: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    TUSD: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
     BTC: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-    ETH: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+    ETH: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    SOL: '88xZgNZx3WLMcDxF8WgPUY1VGb5YhfhFNEPFXvVwY7e2',
+    BNB: 'bnb1grpf0955h0ykzq3ar5nmum7y6gdfl6lxfn46h2',
+    KAS: 'kaspa:qqxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    AVAX: 'X-avax1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    LINK: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    UNI: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    ATOM: 'cosmos1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    ADA: 'addr1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    XRP: 'rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh',
+    DOGE: 'D8vFz4p1L37jdg47HXKtSHA1bF2zn7GEpJ',
+    DOT: '1FRMM8PEiWXYax7rpS6X4XZX1aAAxSWx1CrKTyrVYhV',
+    LTC: 'ltc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    TRX: 'TXYz1xy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    MATIC: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    SHIB: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
 };
 
-// Курсы валют (фиксированные для теста)
+// Объект для хранения курсов криптовалют
 let cryptoPrices = {
-    TON: 2.5,
+    TON: 0,
     USDT: 1,
-    BTC: 43000,
-    ETH: 2200
+    USDC: 1,
+    DAI: 1,
+    BUSD: 1,
+    TUSD: 1,
+    BTC: 0,
+    ETH: 0,
+    SOL: 0,
+    BNB: 0,
+    KAS: 0,
+    AVAX: 0,
+    LINK: 0,
+    UNI: 0,
+    ATOM: 0,
+    ADA: 0,
+    XRP: 0,
+    DOGE: 0,
+    DOT: 0,
+    LTC: 0,
+    TRX: 0,
+    MATIC: 0,
+    SHIB: 0
 };
 
 // Быстрые кнопки
@@ -46,12 +84,46 @@ buyButton.addEventListener('click', () => {
     }
 });
 
+// Получение курсов с Bybit
+async function fetchPrices() {
+    try {
+        const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot');
+        const data = await response.json();
+        
+        if (data.result && data.result.list) {
+            data.result.list.forEach(item => {
+                const symbol = item.symbol;
+                if (symbol.endsWith('USDT')) {
+                    const coin = symbol.replace('USDT', '');
+                    if (coin in cryptoPrices) {
+                        const price = parseFloat(item.lastPrice);
+                        if (price > 0) {
+                            cryptoPrices[coin] = price;
+                            console.log(`${coin}: ${price}`); // Для отладки
+                        }
+                    }
+                }
+            });
+        }
+        updatePrice();
+    } catch (error) {
+        console.error('Error fetching prices:', error);
+    }
+}
+
 // Обновление цены
 function updatePrice() {
     const amount = Number(starsAmount.value) || 0;
     const crypto = cryptoSelect.value;
     const usdPrice = amount * 0.015; // $0.015 за 1 Stars
-    const cryptoAmount = crypto === 'USDT' ? usdPrice : usdPrice / cryptoPrices[crypto];
+    
+    let cryptoAmount;
+    if (crypto === 'USDT' || crypto === 'USDC' || crypto === 'DAI' || crypto === 'BUSD' || crypto === 'TUSD') {
+        cryptoAmount = usdPrice;
+    } else {
+        const price = cryptoPrices[crypto];
+        cryptoAmount = price > 0 ? usdPrice / price : 0;
+    }
     
     priceElement.textContent = `${cryptoAmount.toFixed(6)} ${crypto}`;
     priceUsdElement.textContent = `≈ $${usdPrice.toFixed(2)}`;
@@ -63,7 +135,9 @@ cryptoSelect.addEventListener('change', updatePrice);
 closeModal.addEventListener('click', () => paymentModal.classList.add('hidden'));
 confirmButton.addEventListener('click', () => {
     paymentModal.classList.add('hidden');
-    alert('Транзакция отправлена на проверку');
+    const notification = document.getElementById('notification');
+    notification.classList.remove('hidden');
+    setTimeout(() => notification.classList.add('hidden'), 3000);
 });
 
 // Таймер
@@ -85,4 +159,6 @@ function startTimer() {
 }
 
 // Инициализация
-updatePrice();
+fetchPrices();
+// Обновляем курсы каждые 10 секунд
+setInterval(fetchPrices, 10000);
