@@ -1,3 +1,18 @@
+// В самом начале файла, сразу после инициализации tg
+const tg = window.Telegram.WebApp;
+
+// Принудительно расширяем окно
+if (tg.platform !== 'unknown') {
+    tg.expand();
+}
+
+// Также добавим обработчик на случай, если окно будет свернуто
+tg.onEvent('viewportChanged', () => {
+    if (!tg.isExpanded) {
+        tg.expand();
+    }
+});
+
 // Получаем элементы
 const cryptoSelect = document.getElementById('cryptoSelect');
 const starsAmount = document.getElementById('starsAmount');
