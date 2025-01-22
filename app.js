@@ -203,3 +203,34 @@ starsAmount.addEventListener('keypress', (e) => {
         starsAmount.blur();
     }
 });
+
+// Добавим функцию таймера (она была случайно удалена)
+function startTimer() {
+    // Очищаем предыдущий таймер если он есть
+    if (currentTimer) {
+        clearInterval(currentTimer);
+    }
+    
+    let timeLeft = 300; // 5 минут
+    const timerElement = document.getElementById('paymentTimer');
+    
+    // Сразу обновляем отображение
+    timerElement.textContent = '5:00';
+    
+    currentTimer = setInterval(() => {
+        timeLeft--;
+        
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(currentTimer);
+            paymentModal.classList.add('hidden');
+        }
+    }, 1000);
+}
+
+// Добавим обработчики событий для обновления цены
+starsAmount.addEventListener('input', updatePrice);
+cryptoSelect.addEventListener('change', updatePrice);
