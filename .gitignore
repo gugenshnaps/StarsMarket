@@ -1,5 +1,6 @@
 # Конфиги
 config.js
+config.local.js
 
 # Системные файлы
 .DS_Store
