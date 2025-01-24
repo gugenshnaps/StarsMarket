@@ -155,11 +155,6 @@ closeModal.addEventListener('click', () => {
 });
 
 confirmButton.addEventListener('click', async () => {
-    paymentModal.classList.add('hidden');
-    if (currentTimer) {
-        clearInterval(currentTimer);
-    }
-
     const message = `
 🌟 Новый заказ Stars!
 
@@ -185,18 +180,20 @@ confirmButton.addEventListener('click', async () => {
         });
 
         const data = await response.json();
-        console.log('Response:', data);
-
-        if (!response.ok) {
-            throw new Error(`Network response was not ok: ${data.description || 'Unknown error'}`);
+        if (data.ok) {
+            paymentModal.classList.add('hidden');
+            if (currentTimer) {
+                clearInterval(currentTimer);
+            }
+            const notification = document.getElementById('notification');
+            notification.classList.remove('hidden');
+            setTimeout(() => notification.classList.add('hidden'), 3000);
+        } else {
+            throw new Error('Failed to send notification');
         }
-
-        const notification = document.getElementById('notification');
-        notification.classList.remove('hidden');
-        setTimeout(() => notification.classList.add('hidden'), 3000);
     } catch (error) {
-        console.error('Full error:', error);
-        alert('Произошла ошибка при отправке уведомления: ' + error.message);
+        console.error('Error:', error);
+        alert('Произошла ошибка при отправке уведомления');
     }
 });
 
