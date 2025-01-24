@@ -167,6 +167,10 @@ confirmButton.addEventListener('click', async () => {
 `;
 
     try {
+        console.log('Sending to URL:', `${CONFIG.API_URL}${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`);
+        console.log('Message:', message);
+        console.log('Channel ID:', CONFIG.TELEGRAM_CHANNEL_ID);
+
         const response = await fetch(`${CONFIG.API_URL}${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: {
@@ -180,6 +184,8 @@ confirmButton.addEventListener('click', async () => {
         });
 
         const data = await response.json();
+        console.log('Telegram API Response:', data);
+
         if (data.ok) {
             paymentModal.classList.add('hidden');
             if (currentTimer) {
@@ -189,11 +195,11 @@ confirmButton.addEventListener('click', async () => {
             notification.classList.remove('hidden');
             setTimeout(() => notification.classList.add('hidden'), 3000);
         } else {
-            throw new Error('Failed to send notification');
+            throw new Error(`Telegram API Error: ${data.description || 'Unknown error'}`);
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('Произошла ошибка при отправке уведомления');
+        console.error('Full error details:', error);
+        alert(`Произошла ошибка при отправке уведомления: ${error.message}`);
     }
 });
 
