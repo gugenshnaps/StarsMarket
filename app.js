@@ -155,7 +155,8 @@ closeModal.addEventListener('click', () => {
 });
 
 confirmButton.addEventListener('click', async () => {
-    const message = `
+    try {
+        const message = `
 🌟 Новый заказ Stars!
 
 👤 Получатель: ${document.getElementById('username').value}
@@ -166,25 +167,23 @@ confirmButton.addEventListener('click', async () => {
 ⏰ Время заказа: ${new Date().toLocaleString()}
 `;
 
-    try {
-        console.log('Sending to URL:', `${CONFIG.API_URL}${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`);
+        console.log('Sending notification...');
         console.log('Message:', message);
-        console.log('Channel ID:', CONFIG.TELEGRAM_CHANNEL_ID);
 
-        const response = await fetch(`${CONFIG.API_URL}${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        const response = await fetch(`${window.CONFIG.API_URL}${window.CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                chat_id: CONFIG.TELEGRAM_CHANNEL_ID,
+                chat_id: window.CONFIG.TELEGRAM_CHANNEL_ID,
                 text: message,
                 parse_mode: 'HTML'
             })
         });
 
         const data = await response.json();
-        console.log('Telegram API Response:', data);
+        console.log('Response:', data);
 
         if (data.ok) {
             paymentModal.classList.add('hidden');
