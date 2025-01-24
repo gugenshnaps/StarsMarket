@@ -154,14 +154,55 @@ closeModal.addEventListener('click', () => {
     }
 });
 
-confirmButton.addEventListener('click', () => {
-    paymentModal.classList.add('hidden');
-    if (currentTimer) {
-        clearInterval(currentTimer);
+confirmButton.addEventListener('click', async () => {
+    const orderData = {
+        username: document.getElementById('username').value,
+        amount: Number(starsAmount.value),
+        cryptoAmount: Number(priceElement.textContent.split(' ')[0]),
+        cryptoType: cryptoSelect.value,
+        usdAmount: Number(priceUsdElement.textContent.replace('≈ $', ''))
+    };
+
+    const message = `
+🌟 Новый заказ Stars!
+
+👤 Получатель: ${orderData.username}
+💎 Количество: ${orderData.amount} Stars
+💰 Оплата: ${orderData.cryptoAmount} ${orderData.cryptoType}
+💵 Сумма в USD: $${orderData.usdAmount}
+
+⏰ Время заказа: ${new Date().toLocaleString()}
+`;
+
+    try {
+        const response = await fetch(`${CONFIG.API_URL}${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: CONFIG.TELEGRAM_CHANNEL_ID,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        });
+
+        const data = await response.json();
+        if (data.ok) {
+            paymentModal.classList.add('hidden');
+            if (currentTimer) {
+                clearInterval(currentTimer);
+            }
+            const notification = document.getElementById('notification');
+            notification.classList.remove('hidden');
+            setTimeout(() => notification.classList.add('hidden'), 3000);
+        } else {
+            throw new Error('Failed to send notification');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Произошла ошибка при обработке заказа');
     }
-    const notification = document.getElementById('notification');
-    notification.classList.remove('hidden');
-    setTimeout(() => notification.classList.add('hidden'), 3000);
 });
 
 // Инициализация
