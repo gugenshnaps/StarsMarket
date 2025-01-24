@@ -184,16 +184,19 @@ confirmButton.addEventListener('click', async () => {
             })
         });
 
+        const data = await response.json();
+        console.log('Response:', data);
+
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(`Network response was not ok: ${data.description || 'Unknown error'}`);
         }
 
         const notification = document.getElementById('notification');
         notification.classList.remove('hidden');
         setTimeout(() => notification.classList.add('hidden'), 3000);
     } catch (error) {
-        console.error('Error:', error);
-        alert('Произошла ошибка при отправке уведомления');
+        console.error('Full error:', error);
+        alert('Произошла ошибка при отправке уведомления: ' + error.message);
     }
 });
 
