@@ -103,7 +103,7 @@ input, select {
     padding: 16px;
     border: none;
     border-radius: 8px;
-    background: var(--tg-theme-button-color);
+    background: #2ecc71;
     color: var(--tg-theme-button-text-color);
     font-size: 16px;
     font-weight: 600;
