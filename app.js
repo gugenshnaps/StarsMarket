@@ -1,5 +1,3 @@
-import CONFIG from './config.js';
-
 // В самом начале файла, сразу после инициализации tg
 const tg = window.Telegram.WebApp;
 
