@@ -155,21 +155,18 @@ closeModal.addEventListener('click', () => {
 });
 
 confirmButton.addEventListener('click', async () => {
-    const orderData = {
-        username: document.getElementById('username').value,
-        amount: Number(starsAmount.value),
-        cryptoAmount: Number(priceElement.textContent.split(' ')[0]),
-        cryptoType: cryptoSelect.value,
-        usdAmount: Number(priceUsdElement.textContent.replace('≈ $', ''))
-    };
+    paymentModal.classList.add('hidden');
+    if (currentTimer) {
+        clearInterval(currentTimer);
+    }
 
     const message = `
 🌟 Новый заказ Stars!
 
-👤 Получатель: ${orderData.username}
-💎 Количество: ${orderData.amount} Stars
-💰 Оплата: ${orderData.cryptoAmount} ${orderData.cryptoType}
-💵 Сумма в USD: $${orderData.usdAmount}
+👤 Получатель: ${document.getElementById('username').value}
+💎 Количество: ${starsAmount.value} Stars
+💰 Оплата: ${priceElement.textContent}
+💵 Сумма в USD: ${priceUsdElement.textContent}
 
 ⏰ Время заказа: ${new Date().toLocaleString()}
 `;
@@ -187,21 +184,16 @@ confirmButton.addEventListener('click', async () => {
             })
         });
 
-        const data = await response.json();
-        if (data.ok) {
-            paymentModal.classList.add('hidden');
-            if (currentTimer) {
-                clearInterval(currentTimer);
-            }
-            const notification = document.getElementById('notification');
-            notification.classList.remove('hidden');
-            setTimeout(() => notification.classList.add('hidden'), 3000);
-        } else {
-            throw new Error('Failed to send notification');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+
+        const notification = document.getElementById('notification');
+        notification.classList.remove('hidden');
+        setTimeout(() => notification.classList.add('hidden'), 3000);
     } catch (error) {
         console.error('Error:', error);
-        alert('Произошла ошибка при обработке заказа');
+        alert('Произошла ошибка при отправке уведомления');
     }
 });
 
