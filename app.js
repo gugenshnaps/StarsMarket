@@ -156,6 +156,10 @@ closeModal.addEventListener('click', () => {
 
 confirmButton.addEventListener('click', async () => {
     try {
+        if (!CONFIG) {
+            throw new Error('Configuration is not loaded');
+        }
+
         const message = `
 🌟 Новый заказ Stars!
 
@@ -170,13 +174,13 @@ confirmButton.addEventListener('click', async () => {
         console.log('Sending notification...');
         console.log('Message:', message);
 
-        const response = await fetch(`${window.CONFIG.API_URL}${window.CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        const response = await fetch(`${CONFIG.API_URL}${CONFIG.TELEGRAM_BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                chat_id: window.CONFIG.TELEGRAM_CHANNEL_ID,
+                chat_id: CONFIG.TELEGRAM_CHANNEL_ID,
                 text: message,
                 parse_mode: 'HTML'
             })
