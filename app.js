@@ -11,40 +11,51 @@ if (window.CONFIG) {
 }
 console.log('Current window object:', window);
 
-// В самом начале файла, сразу после инициализации tg
-const tg = window.Telegram.WebApp;
-
-// Принудительно расширяем окно
-if (tg.platform !== 'unknown') {
-    tg.expand();
-}
-
-// Также добавим обработчик на случай, если окно будет свернуто
-tg.onEvent('viewportChanged', () => {
-    if (!tg.isExpanded) {
+// Инициализируем приложение после загрузки DOM
+document.addEventListener('DOMContentLoaded', function initApp() {
+    console.log('DOM loaded, initializing app...');
+    
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    
+    // Принудительно расширяем окно
+    if (tg.platform !== 'unknown') {
         tg.expand();
     }
-});
 
-// Получаем элементы
-const cryptoSelect = document.getElementById('cryptoSelect');
-const starsAmount = document.getElementById('starsAmount');
-const priceElement = document.querySelector('.price');
-const priceUsdElement = document.querySelector('.price-usd');
-const quickAmounts = document.querySelectorAll('.quick-amount');
-const buyButton = document.getElementById('buyButton');
-const paymentModal = document.getElementById('paymentModal');
-const walletAddress = document.getElementById('walletAddress');
-const confirmButton = document.getElementById('confirmButton');
-const closeModal = document.getElementById('closeModal');
+    // Обработчик изменения размера окна
+    tg.onEvent('viewportChanged', () => {
+        if (!tg.isExpanded) {
+            tg.expand();
+        }
+    });
 
-// Проверяем, что все элементы найдены
-if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyButton || 
-    !paymentModal || !walletAddress || !confirmButton || !closeModal) {
-    console.error('Some elements were not found on the page');
-} else {
-    // Остальной код только если все элементы найдены
-    // Адреса кошельков
+    // Получаем все необходимые элементы
+    const elements = {
+        cryptoSelect: document.getElementById('cryptoSelect'),
+        starsAmount: document.getElementById('starsAmount'),
+        priceElement: document.querySelector('.price'),
+        priceUsdElement: document.querySelector('.price-usd'),
+        quickAmounts: document.querySelectorAll('.quick-amount'),
+        buyButton: document.getElementById('buyButton'),
+        paymentModal: document.getElementById('paymentModal'),
+        walletAddress: document.getElementById('walletAddress'),
+        confirmButton: document.getElementById('confirmButton'),
+        closeModal: document.getElementById('closeModal'),
+        notification: document.getElementById('notification')
+    };
+
+    // Проверяем наличие всех элементов
+    const missingElements = Object.entries(elements)
+        .filter(([key, element]) => !element)
+        .map(([key]) => key);
+
+    if (missingElements.length > 0) {
+        console.error('Missing elements:', missingElements);
+        return;
+    }
+
+    // Остальной код без изменений
     const walletAddresses = {
         TON: 'EQBz1_22222222222222222222222222222222222222222',
         USDT: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
@@ -71,7 +82,6 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
         SHIB: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
     };
 
-    // Объект для хранения курсов криптовалют
     let cryptoPrices = {
         TON: 0,
         USDT: 1,
@@ -98,29 +108,9 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
         SHIB: 0
     };
 
-    let currentTimer; // Глобальная переменная для хранения текущего таймера
+    let currentTimer;
 
-    // Быстрые кнопки
-    quickAmounts.forEach(button => {
-        button.addEventListener('click', () => {
-            quickAmounts.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            starsAmount.value = button.dataset.amount;
-            updatePrice();
-        });
-    });
-
-    // Кнопка покупки
-    buyButton.addEventListener('click', () => {
-        const amount = Number(starsAmount.value);
-        if (amount > 0) {
-            walletAddress.textContent = walletAddresses[cryptoSelect.value];
-            paymentModal.classList.remove('hidden');
-            startTimer();
-        }
-    });
-
-    // Получение курсов с Bybit
+    // Функции
     async function fetchPrices() {
         try {
             const response = await fetch('https://api.bybit.com/v5/market/tickers?category=spot');
@@ -135,7 +125,7 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
                             const price = parseFloat(item.lastPrice);
                             if (price > 0) {
                                 cryptoPrices[coin] = price;
-                                console.log(`${coin}: ${price}`); // Для отладки
+                                console.log(`${coin}: ${price}`);
                             }
                         }
                     }
@@ -147,11 +137,10 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
         }
     }
 
-    // Обновление цены
     function updatePrice() {
-        const amount = Number(starsAmount.value) || 0;
-        const crypto = cryptoSelect.value;
-        const usdPrice = amount * 0.015; // $0.015 за 1 Stars
+        const amount = Number(elements.starsAmount.value) || 0;
+        const crypto = elements.cryptoSelect.value;
+        const usdPrice = amount * 0.015;
         
         let cryptoAmount;
         if (crypto === 'USDT' || crypto === 'USDC' || crypto === 'DAI' || crypto === 'BUSD' || crypto === 'TUSD') {
@@ -161,19 +150,59 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
             cryptoAmount = price > 0 ? usdPrice / price : 0;
         }
         
-        priceElement.textContent = `${cryptoAmount.toFixed(6)} ${crypto}`;
-        priceUsdElement.textContent = `≈ $${usdPrice.toFixed(2)}`;
+        elements.priceElement.textContent = `${cryptoAmount.toFixed(6)} ${crypto}`;
+        elements.priceUsdElement.textContent = `≈ $${usdPrice.toFixed(2)}`;
     }
 
-    // Обновляем обработчики
-    closeModal.addEventListener('click', () => {
-        paymentModal.classList.add('hidden');
+    function startTimer() {
+        if (currentTimer) {
+            clearInterval(currentTimer);
+        }
+        
+        let timeLeft = 300;
+        const timerElement = document.getElementById('paymentTimer');
+        timerElement.textContent = '5:00';
+        
+        currentTimer = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(currentTimer);
+                elements.paymentModal.classList.add('hidden');
+            }
+        }, 1000);
+    }
+
+    // Обработчики событий
+    elements.quickAmounts.forEach(button => {
+        button.addEventListener('click', () => {
+            elements.quickAmounts.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            elements.starsAmount.value = button.dataset.amount;
+            updatePrice();
+        });
+    });
+
+    elements.buyButton.addEventListener('click', () => {
+        const amount = Number(elements.starsAmount.value);
+        if (amount > 0) {
+            elements.walletAddress.textContent = walletAddresses[elements.cryptoSelect.value];
+            elements.paymentModal.classList.remove('hidden');
+            startTimer();
+        }
+    });
+
+    elements.closeModal.addEventListener('click', () => {
+        elements.paymentModal.classList.add('hidden');
         if (currentTimer) {
             clearInterval(currentTimer);
         }
     });
 
-    confirmButton.addEventListener('click', async () => {
+    elements.confirmButton.addEventListener('click', async () => {
         try {
             if (!window.CONFIG) {
                 throw new Error('Configuration is not loaded');
@@ -182,10 +211,10 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
             const message = `
 🌟 Новый заказ Stars!
 
-👤 Получатель: ${document.getElementById('username').value}
-💎 Количество: ${starsAmount.value} Stars
-💰 Оплата: ${priceElement.textContent}
-💵 Сумма в USD: ${priceUsdElement.textContent}
+👤 Получатель: ${elements.starsAmount.value}
+💎 Количество: ${elements.starsAmount.value} Stars
+💰 Оплата: ${elements.priceElement.textContent}
+💵 Сумма в USD: ${elements.priceUsdElement.textContent}
 
 ⏰ Время заказа: ${new Date().toLocaleString()}
 `;
@@ -209,13 +238,12 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
             console.log('Response:', data);
 
             if (data.ok) {
-                paymentModal.classList.add('hidden');
+                elements.paymentModal.classList.add('hidden');
                 if (currentTimer) {
                     clearInterval(currentTimer);
                 }
-                const notification = document.getElementById('notification');
-                notification.classList.remove('hidden');
-                setTimeout(() => notification.classList.add('hidden'), 3000);
+                elements.notification.classList.remove('hidden');
+                setTimeout(() => elements.notification.classList.add('hidden'), 3000);
             } else {
                 throw new Error(`Telegram API Error: ${data.description || 'Unknown error'}`);
             }
@@ -228,89 +256,47 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
         }
     });
 
+    // Дополнительные обработчики
+    elements.starsAmount.addEventListener('input', updatePrice);
+    elements.cryptoSelect.addEventListener('change', updatePrice);
+
     // Инициализация
     fetchPrices();
-    // Обновляем курсы каждые 10 секунд
     setInterval(fetchPrices, 10000);
 
-    // Автоматически выбираем 1000 Stars при загрузке
-    window.addEventListener('load', () => {
-        const button1000 = Array.from(quickAmounts).find(btn => btn.dataset.amount === '1000');
-        if (button1000) {
-            button1000.click();
-        }
-    });
+    // Автоматический выбор 1000 Stars
+    const button1000 = Array.from(elements.quickAmounts).find(btn => btn.dataset.amount === '1000');
+    if (button1000) {
+        button1000.click();
+    }
 
-    // Добавим обработчик закрытия окна
-    window.addEventListener('beforeunload', () => {
-        if (currentTimer) {
-            clearInterval(currentTimer);
-        }
-    });
-
-    // Также добавим обработчик для Telegram Mini Apps
-    window.Telegram.WebApp.onEvent('viewportChanged', () => {
-        if (!window.Telegram.WebApp.isExpanded && currentTimer) {
-            clearInterval(currentTimer);
-        }
-    });
-
-    starsAmount.addEventListener('focus', () => {
-        if (window.Telegram.WebApp.platform === 'ios') {
-            window.Telegram.WebApp.setHeaderButton({
+    // Обработчики для iOS
+    elements.starsAmount.addEventListener('focus', () => {
+        if (tg.platform === 'ios') {
+            tg.setHeaderButton({
                 text: 'Done',
                 show: true,
-                onClick: () => starsAmount.blur()
+                onClick: () => elements.starsAmount.blur()
             });
         }
     });
 
-    starsAmount.addEventListener('blur', () => {
-        window.Telegram.WebApp.setHeaderButton({
+    elements.starsAmount.addEventListener('blur', () => {
+        tg.setHeaderButton({
             show: false
         });
     });
 
+    // Закрытие клавиатуры по клику вне поля
     document.addEventListener('click', (e) => {
-        if (e.target !== starsAmount && document.activeElement === starsAmount) {
-            starsAmount.blur();
+        if (e.target !== elements.starsAmount && document.activeElement === elements.starsAmount) {
+            elements.starsAmount.blur();
         }
     });
 
-    starsAmount.addEventListener('keypress', (e) => {
+    elements.starsAmount.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            starsAmount.blur();
+            elements.starsAmount.blur();
         }
     });
-
-    // Добавим функцию таймера (она была случайно удалена)
-    function startTimer() {
-        // Очищаем предыдущий таймер если он есть
-        if (currentTimer) {
-            clearInterval(currentTimer);
-        }
-        
-        let timeLeft = 300; // 5 минут
-        const timerElement = document.getElementById('paymentTimer');
-        
-        // Сразу обновляем отображение
-        timerElement.textContent = '5:00';
-        
-        currentTimer = setInterval(() => {
-            timeLeft--;
-            
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
-            if (timeLeft <= 0) {
-                clearInterval(currentTimer);
-                paymentModal.classList.add('hidden');
-            }
-        }, 1000);
-    }
-
-    // Добавим обработчики событий для обновления цены
-    starsAmount.addEventListener('input', updatePrice);
-    cryptoSelect.addEventListener('change', updatePrice);
-}
+});
