@@ -1,3 +1,7 @@
+// Добавим логирование для проверки загрузки конфигурации
+console.log('Checking CONFIG availability:', window.CONFIG);
+console.log('Current window object:', window);
+
 // В самом начале файла, сразу после инициализации tg
 const tg = window.Telegram.WebApp;
 
@@ -208,6 +212,9 @@ if (!cryptoSelect || !starsAmount || !priceElement || !priceUsdElement || !buyBu
             }
         } catch (error) {
             console.error('Full error details:', error);
+            console.error('Error name:', error.name);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
             alert(`Произошла ошибка при отправке уведомления: ${error.message}`);
         }
     });
