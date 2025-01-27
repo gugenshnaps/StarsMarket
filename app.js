@@ -1,5 +1,14 @@
 // Добавим логирование для проверки загрузки конфигурации
 console.log('Checking CONFIG availability:', window.CONFIG);
+if (window.CONFIG) {
+    console.log('CONFIG details:', {
+        'TELEGRAM_BOT_TOKEN exists': !!window.CONFIG.TELEGRAM_BOT_TOKEN,
+        'TELEGRAM_CHANNEL_ID exists': !!window.CONFIG.TELEGRAM_CHANNEL_ID,
+        'API_URL exists': !!window.CONFIG.API_URL,
+        'BOT_TOKEN length': window.CONFIG.TELEGRAM_BOT_TOKEN ? window.CONFIG.TELEGRAM_BOT_TOKEN.length : 0,
+        'CHANNEL_ID length': window.CONFIG.TELEGRAM_CHANNEL_ID ? window.CONFIG.TELEGRAM_CHANNEL_ID.length : 0
+    });
+}
 console.log('Current window object:', window);
 
 // В самом начале файла, сразу после инициализации tg
