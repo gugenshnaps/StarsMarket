@@ -18,11 +18,13 @@ jobs:
 
       - name: Create config.js
         run: |
-          echo 'window.CONFIG = {
+          cat > config.js << EOL
+          window.CONFIG = {
             TELEGRAM_BOT_TOKEN: "${{ secrets.TELEGRAM_BOT_TOKEN }}",
             TELEGRAM_CHANNEL_ID: "${{ secrets.TELEGRAM_CHANNEL_ID }}",
             API_URL: "https://api.telegram.org/bot"
-          };' > config.js
+          };
+          EOL
           echo "Verifying config.js contents:"
           cat config.js
 
