@@ -5,8 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stars Marketplace</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="config.js" defer></script>
-    <script src="app.js" defer></script>
+    <script>
+        // Проверяем загрузку config.js
+        function checkConfig() {
+            console.log('Checking config at:', new Date().toISOString());
+            if (!window.CONFIG) {
+                console.error('Config not loaded yet');
+            } else {
+                console.log('Config loaded successfully');
+            }
+        }
+    </script>
+    <script src="config.js" onload="checkConfig()"></script>
+    <script src="app.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
