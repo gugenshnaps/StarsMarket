@@ -12,7 +12,7 @@ if (window.CONFIG) {
 console.log('Current window object:', window);
 
 // Инициализация Telegram WebApp
-let tg = window.Telegram.WebApp;
+const tg = window.Telegram.WebApp;
 
 // Проверяем загрузку конфигурации
 console.log('Initial CONFIG check:', window.CONFIG);
