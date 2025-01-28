@@ -16,6 +16,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Check secrets
+        run: |
+          echo "Checking TELEGRAM_BOT_TOKEN length: ${#TELEGRAM_BOT_TOKEN}"
+          echo "Checking TELEGRAM_CHANNEL_ID length: ${#TELEGRAM_CHANNEL_ID}"
+          echo "First 5 chars of bot token: ${TELEGRAM_BOT_TOKEN:0:5}"
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+
       - name: Create config.js
         run: |
           cat > config.js << EOL
