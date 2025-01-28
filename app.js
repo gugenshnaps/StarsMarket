@@ -11,13 +11,19 @@ if (window.CONFIG) {
 }
 console.log('Current window object:', window);
 
-// Инициализируем приложение после загрузки DOM
-document.addEventListener('DOMContentLoaded', function initApp() {
-    console.log('DOM loaded, initializing app...');
+// Инициализация Telegram WebApp
+const tg = window.Telegram.WebApp;
+
+// Дожидаемся загрузки DOM
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app');
     
-    // Инициализация Telegram WebApp
-    const tg = window.Telegram.WebApp;
-    
+    // Проверяем наличие конфигурации
+    if (!window.CONFIG) {
+        console.error('Configuration is not loaded');
+        return;
+    }
+
     // Принудительно расширяем окно
     if (tg.platform !== 'unknown') {
         tg.expand();

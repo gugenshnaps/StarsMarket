@@ -5,38 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Stars Marketplace</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="config.js"></script>
     <script>
-        // Функция для загрузки скрипта с проверкой
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = () => {
-                    console.log(`Script ${src} loaded successfully`);
-                    resolve();
-                };
-                script.onerror = () => {
-                    console.error(`Error loading script ${src}`);
-                    reject(new Error(`Failed to load ${src}`));
-                };
-                document.head.appendChild(script);
-            });
-        }
-
-        // Загружаем скрипты последовательно
-        async function loadScripts() {
-            try {
-                await loadScript('config.js');
-                console.log('CONFIG after loading:', window.CONFIG);
-                await loadScript('app.js');
-            } catch (error) {
-                console.error('Error loading scripts:', error);
+        // Проверяем загрузку конфигурации
+        window.addEventListener('load', function() {
+            console.log('Window loaded, checking CONFIG:', window.CONFIG);
+            if (!window.CONFIG) {
+                console.error('Configuration is not loaded');
             }
-        }
-
-        // Запускаем загрузку
-        loadScripts();
+        });
     </script>
+    <script src="app.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
