@@ -18,15 +18,6 @@ jobs:
 
       - name: Create config.js
         run: |
-          echo "Creating config.js..."
-          echo "Content will be:"
-          echo "window.CONFIG = {"
-          echo "  TELEGRAM_BOT_TOKEN: \"${{ secrets.TELEGRAM_BOT_TOKEN }}\","
-          echo "  TELEGRAM_CHANNEL_ID: \"${{ secrets.TELEGRAM_CHANNEL_ID }}\","
-          echo "  API_URL: \"https://api.telegram.org/bot\""
-          echo "};"
-          
-          # Create the actual file
           cat > config.js << EOL
           window.CONFIG = {
             TELEGRAM_BOT_TOKEN: "${{ secrets.TELEGRAM_BOT_TOKEN }}",
@@ -35,17 +26,7 @@ jobs:
           };
           EOL
           
-          echo "config.js created. File exists:"
-          ls -l config.js
-          
-          echo "File contents:"
-          cat config.js
-          
-          echo "File permissions:"
-          stat config.js
-          
-          echo "Directory contents:"
-          ls -la
+          echo "config.js created successfully"
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
