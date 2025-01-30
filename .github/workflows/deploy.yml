@@ -16,30 +16,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Check secrets
+      - name: Create and verify config.js
         run: |
-          echo "Checking TELEGRAM_BOT_TOKEN length: ${#TELEGRAM_BOT_TOKEN}"
-          echo "Checking TELEGRAM_CHANNEL_ID length: ${#TELEGRAM_CHANNEL_ID}"
-          echo "First 5 chars of bot token: ${TELEGRAM_BOT_TOKEN:0:5}"
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-
-      - name: Create config.js
-        run: |
-          cat > config.js << EOL
-          window.CONFIG = {
-            TELEGRAM_BOT_TOKEN: "${{ secrets.TELEGRAM_BOT_TOKEN }}",
-            TELEGRAM_CHANNEL_ID: "${{ secrets.TELEGRAM_CHANNEL_ID }}",
-            API_URL: "https://api.telegram.org/bot"
-          };
-          EOL
+          # Create config.js
+          echo "window.CONFIG = {" > config.js
+          echo "  TELEGRAM_BOT_TOKEN: \"${{ secrets.TELEGRAM_BOT_TOKEN }}\"," >> config.js
+          echo "  TELEGRAM_CHANNEL_ID: \"${{ secrets.TELEGRAM_CHANNEL_ID }}\"," >> config.js
+          echo "  API_URL: \"https://api.telegram.org/bot\"" >> config.js
+          echo "};" >> config.js
           
-          echo "config.js created successfully"
+          # Verify file exists and has content
+          echo "=== config.js contents ==="
+          cat config.js
+          echo "======================"
+          
+          # Check if values are properly set
+          if grep -q "undefined" config.js; then
+            echo "Error: undefined values found in config.js"
+            exit 1
+          fi
+          
+          if [ ! -s config.js ]; then
+            echo "Error: config.js is empty"
+            exit 1
+          fi
+
+      - name: Prepare files for deployment
+        run: |
+          # Create a temporary directory for deployment
+          mkdir deploy
+          # Copy all files except .git and .github
+          cp -r * deploy/ 2>/dev/null || true
+          # Ensure config.js is copied
+          cp config.js deploy/
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           branch: gh-pages
-          folder: .
+          folder: deploy
           clean: true
+
